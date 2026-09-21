@@ -1,6 +1,9 @@
 <template>
     <header class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-slate-800 cursor-pointer hover:text-blue-600 transition" @click="goToHome">
+        <h1 class="text-2xl font-bold cursor-pointer transition 
+         bg-gradient-to-r from-green-600 to-blue-500 
+         bg-clip-text text-transparent
+         hover:from-blue-500 hover:to-green-600" @click="goToHome">
             StudioSpace Owner
         </h1>
         <div class="flex justify-between gap-x-4">
@@ -50,8 +53,8 @@ function goToHome() {
 }
 
 function logout() {
-  localStorage.clear()
-  window.location.href = '/login'  
+    localStorage.clear()
+    window.location.href = '/login'
 }
 
 

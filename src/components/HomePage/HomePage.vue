@@ -55,11 +55,11 @@
                     </h3>
                     <span :class="[
                       'px-3 py-1 text-xs font-semibold rounded-full shadow-md whitespace-nowrap',
-                      studio.status === 'active'
+                      studio.studio_status === 'active'
                         ? 'bg-green-100 text-green-700 shadow-green-300'
                         : 'bg-red-100 text-red-700 shadow-red-300'
                     ]">
-                      {{ studio.status === 'active' ? 'ACTIVE' : 'INACTIVE' }}
+                      {{ studio.studio_status === 'active' ? 'ACTIVE' : 'INACTIVE' }}
                     </span>
                   </div>
                   <p class="text-sm text-slate-500 mt-1">ID: {{ studio.studio_id }}</p>

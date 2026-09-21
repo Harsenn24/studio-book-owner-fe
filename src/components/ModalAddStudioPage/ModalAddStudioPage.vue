@@ -1,7 +1,7 @@
 <template>
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-6">
+    <div class="min-h-screen fixed inset-0 z-50 flex items-center justify-center p-6">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeModal"></div>
-        <div class="relative bg-white rounded-2xl w-full max-w-2xl p-6 z-50 drop-shadow-2xl border border-white/30">
+        <div class="max-h-screen overflow-y-auto relative bg-white rounded-2xl w-full max-w-2xl p-6 z-50 drop-shadow-2xl border border-white/30 scrollbar-hide">
             <header class="flex items-start justify-between gap-4 mb-4">
                 <h3 class="text-lg font-semibold text-black">Form Pengajuan Studio</h3>
                 <button @click="closeModal" class="text-slate-400 bg-white! hover:text-slate-600">✖️</button>
@@ -102,6 +102,22 @@
                             Harus berupa tautan (URL) yang valid.
                         </p>
                     </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">Estimasi Jumlah Studio</label>
+
+                        <input type="text" inputmode="numeric" v-model="form.estimatedStudioNumber" required @input="
+                            form.estimatedStudioNumber = form.estimatedStudioNumber.replace(/[^0-9]/g, '');
+                        if (form.estimatedStudioNumber !== '' && Number(form.estimatedStudioNumber) < 1) {
+                            form.estimatedStudioNumber = '1';
+                        }
+                        " class="mt-2 w-full rounded-lg border px-3 py-2 text-sm border-black text-black"
+                            placeholder="1" />
+
+                        <p v-if="form.estimatedStudioNumber !== '' && Number(form.estimatedStudioNumber) < 1"
+                            class="text-xs text-red-500 mt-1">
+                            Estimasi jumlah studio minimal 1.
+                        </p>
+                    </div>
                 </div>
 
                 <div class="mt-4">
@@ -184,42 +200,30 @@
                         <p v-if="errorsFile.ktp" class="text-xs text-red-500 mt-1">{{ errorsFile.ktp }}</p>
                     </div>
 
-                    <div>
-                        <label class="text-sm font-medium text-slate-700">Upload Foto Studio 1</label>
+                    <div v-for="n in Number(form.estimatedStudioNumber)" :key="n">
+                        <label class="text-sm font-medium text-slate-700">
+                            Upload Foto Studio {{ n }}
+                        </label>
 
-                        <input v-if="!previewFile.studio1" type="file" accept="image/*" required
-                            @change="handleFileUpload($event, 'studio1')"
+                        <!-- Input file -->
+                        <input v-if="!previewFile[`studio${n}`]" type="file" accept="image/*" required
+                            @change="handleFileUpload($event, `studio${n}`)"
                             class="mt-2 w-full rounded-lg border px-3 py-3 text-sm border-black text-black cursor-pointer" />
 
+                        <!-- Preview file -->
                         <div v-else class="mt-3 relative rounded-lg overflow-hidden border border-gray-300 shadow-md">
-                            <img :src="previewFile.studio1" alt="Preview Studio 1"
+                            <img :src="previewFile[`studio${n}`]" :alt="`Preview Studio ${n}`"
                                 class="w-full aspect-[16/9] object-cover" />
-                            <button type="button" @click="removeFile('studio1')"
+                            <button type="button" @click="removeFile(`studio${n}`)"
                                 class="absolute top-2 right-2 bg-white bg-opacity-80 hover:bg-opacity-100 text-xs font-medium px-2 py-1 rounded shadow">
                                 Ganti Foto
                             </button>
                         </div>
 
-                        <p v-if="errorsFile.studio1" class="text-xs text-red-500 mt-1">{{ errorsFile.studio1 }}</p>
-                    </div>
-
-                    <div>
-                        <label class="text-sm font-medium text-slate-700">Upload Foto Studio 2</label>
-
-                        <input v-if="!previewFile.studio2" type="file" accept="image/*" required
-                            @change="handleFileUpload($event, 'studio2')"
-                            class="mt-2 w-full rounded-lg border px-3 py-3 text-sm border-black text-black cursor-pointer" />
-
-                        <div v-else class="mt-3 relative rounded-lg overflow-hidden border border-gray-300 shadow-md">
-                            <img :src="previewFile.studio2" alt="Preview Studio 2"
-                                class="w-full aspect-[16/9] object-cover" />
-                            <button type="button" @click="removeFile('studio2')"
-                                class="absolute top-2 right-2 bg-white bg-opacity-80 hover:bg-opacity-100 text-xs font-medium px-2 py-1 rounded shadow">
-                                Ganti Foto
-                            </button>
-                        </div>
-
-                        <p v-if="errorsFile.studio2" class="text-xs text-red-500 mt-1">{{ errorsFile.studio2 }}</p>
+                        <!-- Error message -->
+                        <p v-if="errorsFile[`studio${n}`]" class="text-xs text-red-500 mt-1">
+                            {{ errorsFile[`studio${n}`] }}
+                        </p>
                     </div>
                 </div>
 
@@ -321,7 +325,8 @@ const form = ref({
     bankAccount: '',
     contactName: '',
     contactPhone: '',
-    document_ids: []
+    document_ids: [],
+    estimatedStudioNumber: null
 });
 
 
@@ -663,7 +668,8 @@ async function submitForm() {
                 bank_code: form.value.bank,
                 bank_account_number: form.value.bankAccount
             },
-            document_ids: form.value.document_ids // Semua file_id yang sudah diupload
+            document_ids: form.value.document_ids, // Semua file_id yang sudah diupload
+            estimated_studio_number: form.value.estimatedStudioNumber
         };
 
         const response = await axios.post(`${BE_BASE_URL}owner/studio/submission`, payload, { // Asumsi endpoint submit

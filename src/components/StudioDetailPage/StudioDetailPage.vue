@@ -11,107 +11,82 @@
 
             <HeadersPage @open-modal="openModal" @logout="logout" />
 
-            <!-- STUDIO INFO CARD -->
-            <div class="bg-gradient-to-r from-blue-600 to-green-500 py-5">
 
-                <section
-                    class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 max-w-4xl mx-auto backdrop-blur-sm">
+            <!-- FULL WIDTH BACKGROUND -->
+            <div class="w-full bg-gradient-to-r from-green-600 to-blue-500 py-3 flex justify-center">
 
-                    <!-- HEADER -->
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-semibold text-blue-800">{{ studio.studio_name }}</h2>
-                        <p class="text-sm text-black">ID: {{ studio.studio_id }}</p>
-                    </div>
+                <!-- CONTENT (TETAP CENTER) -->
+                <div class="max-w-4xl mx-auto">
 
-                    <!-- GRID INFO -->
-                    <div class="grid md:grid-cols-2 gap-6">
+                    <div class="flex gap-20 border-b border-white/30">
 
-                        <!-- ALAMAT -->
-                        <div>
-                            <h3 class="text-sm font-semibold text-blue-600 mb-2">Alamat Lengkap</h3>
-                            <div class="space-y-1 text-slate-700">
-                                <p>{{ studio.studio_address }}</p>
-                                <p>{{ studio.studio_district }}, {{ studio.studio_city }}</p>
-                                <p>{{ studio.studio_province }}, {{ studio.studio_postal_code }}</p>
+                        <button @click="activeTab = 'profil'"
+                            class="relative px-4 py-2 text-sm font-semibold transition bg-white!" :class="activeTab === 'profil'
+                                ? 'text-black'
+                                : 'text-black hover:text-white'">
+                            Profil
+
+                            <div v-if="activeTab === 'profil'"
+                                class="absolute bottom-0 left-0 w-full h-[3px] bg-red-600! rounded-full">
                             </div>
-                        </div>
-
-                        <!-- CONTACT PERSON -->
-                        <div>
-                            <h3 class="text-sm font-semibold text-blue-600 mb-2">Contact Person</h3>
-                            <div class="space-y-1 text-slate-700">
-                                <p>{{ studio.studio_contact_person_name }}</p>
-                                <p>{{ studio.studio_contact_person_phone }}</p>
-                            </div>
-                        </div>
-
-                        <!-- ACCOUNT BANK -->
-                        <div>
-                            <h3 class="text-sm font-semibold text-blue-600 mb-2">Rekening Pembayaran</h3>
-                            <div class="space-y-1 text-slate-700">
-                                <p>{{ studio.studio_bank_name }}</p>
-                                <p>No: {{ studio.studio_bank_account_number }}</p>
-                            </div>
-                        </div>
-
-                        <!-- STATUS -->
-                        <div>
-                            <h3 class="text-sm font-semibold text-blue-600 mb-2">Status Studio</h3>
-                            <span :class="[
-                                'px-3 py-1 text-xs font-semibold rounded-full shadow-md',
-                                studio.status === 'active'
-                                    ? 'bg-green-100 text-green-700 shadow-green-300'
-                                    : 'bg-red-100 text-red-700 shadow-red-300'
-                            ]">
-                                {{ studio.status === 'active' ? 'ACTIVE' : 'INACTIVE' }}
-                            </span>
-                        </div>
-
-                    </div>
-                </section>
-
-                <!-- STUDIO NUMBER LIST SECTION -->
-                <section
-                    class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 max-w-4xl mx-auto backdrop-blur-sm mt-5">
-
-                    <h2 class="text-xl font-semibold text-slate-800 mb-4">
-                        🎧 Daftar Nomor Studio
-                    </h2>
-
-                    <!-- KALAU ADA DATA -->
-                    <div v-if="studioNumbers.length" class="grid md:grid-cols-2 gap-4">
-                        <div v-for="sn in studioNumbers" :key="sn.id"
-                            class="p-4 rounded-xl border border-slate-200 shadow hover:shadow-md transition bg-white flex justify-between items-center">
-                            <div>
-                                <p class="font-semibold text-slate-800">Studio #{{ sn.number }}</p>
-                                <p class="text-sm text-slate-500">Tipe: {{ sn.type }}</p>
-                            </div>
-
-                            <button
-                                class="px-3 py-1 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-                                @click="openStudioNumberDetail(sn)">
-                                Detail
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- KALAU BELUM PUNYA -->
-                    <div v-else class="text-center py-10">
-                        <p class="text-slate-500">📭 Kamu belum memiliki nomor studio.</p>
-                        <p class="text-slate-400 text-sm">Silakan tambahkan nomor studio untuk memulai.</p>
-
-                        <button
-                            class="mt-4 px-4 py-2 bg-green-600! text-white rounded-xl shadow hover:bg-green-700! transition"
-                            @click="addStudioNumber">
-                            + Tambah Nomor Studio
                         </button>
+
+                        <button @click="activeTab = 'subscription'"
+                            class="relative px-4 py-2 text-sm font-semibold transition bg-white!" :class="activeTab === 'subscription'
+                                ? 'text-black!'
+                                : 'text-black! hover:text-white'">
+                            Transaksi Berlangganan
+                            <div v-if="activeTab === 'subscription'"
+                                class="absolute bottom-0 left-0 w-full h-[3px] bg-red-600! rounded-full">
+                            </div>
+                        </button>
+
+                        <button @click="activeTab = 'rent'"
+                            class="relative px-4 py-2 text-sm font-semibold transition bg-white!" :class="activeTab === 'rent'
+                                ? 'text-black!'
+                                : 'text-black! hover:text-white'">
+                            Transaksi Sewa
+                            <div v-if="activeTab === 'rent'"
+                                class="absolute bottom-0 left-0 w-full h-[3px] bg-red-600! rounded-full">
+                            </div>
+                        </button>
+
+                        <button @click="activeTab = 'withdrawal'"
+                            class="relative px-4 py-2 text-sm font-semibold transition bg-white!" :class="activeTab === 'withdrawal'
+                                ? 'text-black!'
+                                : 'text-black! hover:text-white'">
+                            Penarikan Dana
+                            <div v-if="activeTab === 'withdrawal'"
+                                class="absolute bottom-0 left-0 w-full h-[3px] bg-red-600! rounded-full">
+                            </div>
+                        </button>
+
                     </div>
 
-                </section>
+                </div>
             </div>
+
+            <ProfilPage v-if="activeTab === 'profil'" :studio="studio" :studioNumbers="studioNumbers"
+                :estimatedStudios="estimatedStudios" :BE_BASE_URL="BE_BASE_URL" :formatRupiah="formatRupiah"
+                @open-payment="showModalPaymentSubscribe = true" @add-studio="addStudioNumber"
+                @edit-studio="openStudioNumberDetail" />
+
+            <!-- TAB: SUBSCRIPTION -->
+            <SubscriptionTransactionPage v-if="activeTab === 'subscription'" />
+
+            <UserRentTransactionPage v-if="activeTab === 'rent'" />
+
+            <WithdrawalTransactionPage v-if="activeTab === 'withdrawal'" />
+
+
 
             <transition name="modal-fade">
                 <ModalAddStudioPage v-if="showModal" @close-modal="closeModal" />
+            </transition>
+
+            <transition name="modal-fade">
+                <PaymentSubscribeModalPage v-if="showModalPaymentSubscribe"
+                    @close-modal="showModalPaymentSubscribe = false" />
             </transition>
 
 
@@ -127,7 +102,12 @@ import { useRouter } from 'vue-router'
 import { getIpAdresses } from '../../services/axios/ip-adress.services.js'
 import HeadersPage from '../HeadersPage/HeadersPage.vue'
 import ModalAddStudioPage from '../ModalAddStudioPage/ModalAddStudioPage.vue'
-import { listStudio, submission } from '../../api/studio.js'
+import { studioNumberOwner, submission } from '../../api/studio.js'
+import PaymentSubscribeModalPage from '../PaymentSubscribeModal/PaymentSubscribeModalPage.vue'
+import ProfilPage from './Tab/ProfilPage.vue'
+import SubscriptionTransactionPage from './Tab/SubscriptionTransactionPage.vue'
+import UserRentTransactionPage from './Tab/UserRentTransactionPage.vue'
+import WithdrawalTransactionPage from './Tab/WithdrawalTransactionPage.vue'
 
 
 
@@ -138,10 +118,22 @@ const router = useRouter()
 const showModal = ref(false)
 const isInitialLoading = ref(true)
 
-
-const studioList = ref([])
+const estimatedStudios = ref(null)
+const studioNumbers = ref([])
 const checkSubmissionStatus = ref('')
 
+const showModalPaymentSubscribe = ref(false)
+
+const studio_uuid = router.currentRoute.value.params.studio_uuid
+
+const activeTab = ref('profil') // default tab pertama
+
+
+const sn = ref({
+    id: null,
+    number: null,
+    type: null
+})
 
 const studio = ref({
     studio_id: null,
@@ -159,18 +151,22 @@ const studio = ref({
     status: ""
 })
 
+
 function openModal() { showModal.value = true }
 function closeModal() {
     showModal.value = false
 }
 
-async function fetchStudio() {
+async function fetchStudioNumbers() {
     try {
-        const response = await listStudio(1, '')
-        studioList.value = response.data.data.data
+        const response = await studioNumberOwner(studio_uuid);
+
+        studioNumbers.value = response?.data?.data?.data ?? [];
+
     } catch (error) {
-        console.error(error)
-        alert('Gagal memuat data studio. Silakan coba lagi.')
+        console.error(error);
+        studioNumbers.value = [];
+        alert('Gagal memuat data studio number.');
     }
 }
 
@@ -206,6 +202,7 @@ async function fetchStudioDetail() {
 
         if (studioData.data.status) {
             studio.value = studioData.data.data
+            estimatedStudios.value = studioData.data.data.estimated_studio_number
         }
 
     } catch (error) {
@@ -221,14 +218,20 @@ function logout() {
 }
 
 
-const studioNumbers = ref([
-    // contoh dummy
-    // { id: 1, number: 1, type: 'Vocal Room' },
-    // { id: 2, number: 2, type: 'Band Room' }
-])
-
 function openStudioNumberDetail(sn) {
-    console.log("Open Studio Number:", sn)
+    const studio_uuid = router.currentRoute.value.params.studio_uuid
+    const studio_number_uuid = sn.id
+    router.push(`/home/${studio_uuid}/${studio_number_uuid}`)
+    // console.log("Open Studio Number:", sn)
+}
+
+const formatRupiah = (value) => {
+    if (!value) return 'Rp 0'
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(value)
 }
 
 function addStudioNumber() {
@@ -238,7 +241,7 @@ function addStudioNumber() {
 
 onMounted(async () => {
     try {
-        await Promise.all([fetchStudioDetail(), fetchStudio(), fetchSubmission()])
+        await Promise.all([fetchStudioNumbers(), fetchStudioDetail(), fetchSubmission()])
     } finally {
         isInitialLoading.value = false
     }

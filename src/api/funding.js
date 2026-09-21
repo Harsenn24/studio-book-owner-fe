@@ -8,182 +8,157 @@ const token = localStorage.getItem('token')
 const deviceId = localStorage.getItem('device_id')
 const ip = await getIpAdresses()
 
-async function listStudio(page, search) {
+async function subscriptionList(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/list`,
+        url: `${BE_BASE_URL}owner/funding/subscription/list`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: {
-            page,
-            limit: 6,
-            search
-        }
+        data: payload
     })
 
     return response
 }
 
-async function submission() {
+async function rentList(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/submission/check`,
+        url: `${BE_BASE_URL}owner/funding/transaction/list`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: {}
+        data: payload
     })
 
     return response
 }
 
-async function studioNumberOwner(studio_uuid) {
+async function ownerTransactionDetailApi(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/studio-number/list`,
+        url: `${BE_BASE_URL}owner/funding/transaction/detail`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: {
-            page: 1,
-            limit: 10000,
-            studio_uuid,
-        }
+        data: payload
     })
 
     return response
 }
 
-async function submitStudioNumber(payload) {
+async function reconApi(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/studio-number/create`,
+        url: `${BE_BASE_URL}owner/funding/recon`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: { ...payload }
+        data: payload
     })
 
     return response
 }
 
-async function studioNumberDetail(studio_number_uuid, studio_uuid) {
+async function bankListApi(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/studio-number/detail`,
+        url: `${BE_BASE_URL}owner/funding/bank-list`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: {
-            studio_number_uuid,
-            studio_uuid
-        }
+        data: payload
     })
 
     return response
 }
 
-async function editStudioNumber(payload) {
+async function editBankAccountApi(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/studio-number/edit`,
+        url: `${BE_BASE_URL}owner/funding/bank-account/edit`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: { ...payload }
+        data: payload
     })
 
     return response
 }
 
-async function subscriptionPrice() {
+async function adminTransferFeeApi() {
+    const response = await axios({
+        method: 'GET',
+        url: `${BE_BASE_URL}owner/funding/transfer/fee`,
+    })
+
+    return response
+}
+
+async function inquiryApi(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/subscription/price`,
+        url: `${BE_BASE_URL}owner/funding/inquiry`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: {}
+        data: payload
     })
 
     return response
 }
 
-async function checkQrSubscription(studio_uuid) {
+async function transferApi(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/subscription/qr/check`,
+        url: `${BE_BASE_URL}owner/funding/transfer`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: {
-            studio_id : studio_uuid
-        }
+        data: payload
     })
 
     return response
 }
 
-async function subscribeStudio(studio_uuid) {
+async function disbursementListApi(payload) {
     const response = await axios({
         method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/subscription`,
+        url: `${BE_BASE_URL}owner/funding/disbursement/list`,
         headers: {
             'authorization': `Bearer ${token}`,
             'x-device-id': deviceId,
             'x-ip-address': ip,
             'x-request-id': uuidv4()
         },
-        data: {
-            studio_id : studio_uuid
-        }
+        data: payload
     })
 
     return response
 }
 
-async function checkSubscriptionPayment(studio_uuid, transaction_id) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/funding/subscription/status`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {
-            studio_id : studio_uuid,
-            transaction_id
-        }
-    })
-
-    return response
-}
-
-export { listStudio, submission, studioNumberOwner, submitStudioNumber, studioNumberDetail, editStudioNumber, subscriptionPrice, checkQrSubscription, subscribeStudio, checkSubscriptionPayment }
+export { subscriptionList, rentList, ownerTransactionDetailApi, reconApi, bankListApi, editBankAccountApi, adminTransferFeeApi, inquiryApi, transferApi, disbursementListApi }
