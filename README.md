@@ -103,45 +103,38 @@ No component library — every card, modal, tab bar, dropdown, and table is hand
 
 ```
 src/
-├── api/                  # Endpoint wrappers grouped by backend domain
-│   ├── studio.js         #   studios, rooms, subscriptions
-│   └── funding.js        #   transactions, reconciliation, disbursement, banks
-├── services/axios/       # Cross-cutting request helpers
-│   └── ip-adress.services.js
+├── api/                 # every backend call, grouped by domain
+│   ├── http.js          #   one Axios instance: headers, envelope, error messages, 401 handling
+│   ├── auth.js  studio.js  funding.js  master.js (regions, dates/hours, file uploads)
+├── composables/         # useSession, useToast, useOwnerOverview (submission + studio count), usePagedList
+├── utils/format.js      # price/date/epoch formatting, status labels, equipment icons
 ├── components/
-│   ├── <Page>/           # One folder per screen
-│   └── StudioDetailPage/
-│       └── Tab/          # Tab bodies + their modals, isolated per concern
-├── router/index.js
-├── main.js
-└── style.css
+│   ├── layout/          # AppLayout (navbar + "Tambah Studio"), AuthLayout (hero split)
+│   ├── ui/              # buttons, inputs, modal, sheet, autocomplete, image upload, pagination, filters, stat card…
+│   ├── auth/            # verification e-mail notices
+│   ├── studio/          # submission form + status, studio card, profile tab, subscription modal
+│   └── funding/         # subscription / rent / withdrawal tabs, transfer & bank modals
+├── pages/               # one file per route
+└── router/index.js      # lazy routes + auth guard (paths unchanged)
 ```
 
-**API layer.** Every backend call lives in `src/api/`, never inline in a component. Each wrapper attaches the same four headers that the backend requires on authenticated routes:
+**One HTTP client.** `api/http.js` attaches `Authorization`, `x-device-id` (persistent per browser), `x-ip-address` (resolved once per tab, `0.0.0.0` if ipify is blocked) and a fresh `x-request-id` to every call. 4xx answers are read as the `{ status, message, data }` envelope, validation arrays are joined and known backend messages are translated for the owner. A 401 clears the session and returns to `/login`.
 
-| Header | Value |
-| --- | --- |
-| `authorization` | `Bearer <token>` from `localStorage` |
-| `x-device-id` | Per-device UUID minted at login |
-| `x-ip-address` | Resolved once via ipify |
-| `x-request-id` | Fresh UUID v4 per request, for server-side tracing |
+**Auth in the router.** Every `/home…` route has `meta.requiresAuth`; one `beforeEach` guard redirects to `/login?redirect=…`.
 
-**Tabs as components.** `StudioDetailPage` owns only the tab state and the shared studio fetch; each tab (`ProfilPage`, `SubscriptionTransactionPage`, `UserRentTransactionPage`, `WithdrawalTransactionPage`) fetches and paginates its own data and is mounted only when active — so switching tabs never carries stale state or dangling requests from the previous one.
+**Shared list logic.** The three transaction tabs use `usePagedList`: debounced filters reset to page 1, pagination uses the API totals, and stale responses are discarded. Tables become cards on phones.
 
-**Filter → fetch loop.** The transaction tables share one pattern: a reactive `filters` object under a `deep` watcher that resets to page 1 and refetches, plus a separate `page` watcher. Date inputs are converted to epoch seconds with end-of-day normalisation (`23:59:59.999`) so an end-date filter is inclusive, and optional filters are only added to the payload when non-empty rather than sent as empty strings.
+**Responsive shell.** Desktop gets wide grids, sticky summaries and dialogs; phones get full-screen sheets for long forms, sticky action bars and horizontally scrolling tabs.
 
 ---
 
 ## Notable implementation details
 
-A few things that were more interesting than they look:
-
-- **Cascading resets.** Each address selector clears every dependent field *and* its loaded option list before triggering the next fetch. Without this, changing a province after filling the form would leave a stale village ID attached to a different city.
-- **Dual timers with disciplined cleanup.** The QRIS modal is the only place in the app running background work. Every `setInterval` handle is nulled after `clearInterval`, and cleanup is wired to four separate exits (paid, expired, closed, unmounted).
-- **Fee-aware balance validation.** The withdrawal check is `amount + adminFee ≤ pendingRecon`, not `amount ≤ balance` — the fee is fetched separately and folded into a `computed`, so the owner is never allowed to request an amount that would fail at the bank.
-- **Inquiry before transfer.** Resolving the account-holder name and showing it for confirmation is a deliberate extra round-trip; it is the standard safeguard against typo'd account numbers in Indonesian interbank transfers.
-- **One component, two modes.** `CreateStudioDetailPage` detects edit mode from route params alone, then conditionally fans out its `onMounted` fetches with `Promise.all` — five parallel calls in edit mode, four in create mode.
-- **Concurrent bootstrapping.** Every page that needs multiple independent resources fires them with `Promise.all` behind a single loading spinner, with `isLoading` cleared in `finally` so a failed call can't leave the app stuck on a spinner.
+- **Cascading resets.** Picking a province/city/district/village clears every level below it, so a stale village can never stay attached to a different city.
+- **One photo id per slot.** Submission photos are stored per slot (KTP, studio 1…n); replacing a photo replaces its id, so the request always carries exactly `estimated_studio_number + 1` documents as the backend requires.
+- **Fee-aware withdrawal.** The check is `amount + adminFee ≤ available balance`; the balance is re-fetched right before the confirmation dialog, and the backend enforces the same rule under a row lock.
+- **Inquiry before transfer.** The account-holder name is resolved and shown before the transfer can be confirmed.
+- **Timers with cleanup.** The QRIS modal's countdown and status polling stop on paid, expired, close and unmount.
 
 ---
 
@@ -183,12 +176,12 @@ The dev server is configured with `host: true` and allows `*.ngrok-free.app` / `
 
 | Path | Contents |
 | --- | --- |
-| `src/api/studio.js` | Studio list, submission check, room CRUD, subscription price / QR / status |
-| `src/api/funding.js` | Subscription & rental transaction lists, transaction detail, reconciliation, bank list, bank edit, transfer fee, inquiry, transfer, disbursement list |
-| `src/components/ModalAddStudioPage/` | The full business-submission form |
-| `src/components/CreateStudioDetailPage/` | Room create/edit, equipment, pricing, operating hours, Excel import |
-| `src/components/PaymentSubscribeModal/` | QRIS generation, polling, countdown |
-| `src/components/StudioDetailPage/Tab/` | The four detail tabs plus the transfer and bank-edit modals |
+| `src/pages/HomePage.vue` | Dashboard: studio grid, search, pagination, submission status, onboarding |
+| `src/components/studio/SubmissionFormModal.vue` | The submission form (regions, contact, bank, KTP + one photo per room) |
+| `src/pages/StudioNumberFormPage.vue` | Room create/edit: equipment, prices, operating hours, Excel import, photo |
+| `src/pages/StudioDetailPage.vue` | Studio detail with the four tabs (`?tab=` keeps the active one) |
+| `src/components/studio/SubscriptionModal.vue` | QRIS generation, polling, countdown (duration in days) |
+| `src/components/funding/` | Subscription, rent and withdrawal tabs plus transfer and bank-edit modals |
 
 ---
 
@@ -203,7 +196,8 @@ All endpoints are `POST` with a JSON body (file uploads use `multipart/form-data
   "data": {
     "data":  [ /* rows */ ],
     "page":  1,
-    "total": 42
+    "totalData": 42,   // "total" on the subscription list
+    "maxPage": 5
   }
 }
 ```
@@ -223,12 +217,10 @@ Endpoint groups consumed by this app:
 
 ## Roadmap
 
-Honest notes on what this codebase would need before production:
-
-- **Axios instance + interceptors.** Auth headers are currently assembled per function and read from `localStorage` at module load, which means a token refresh requires a page reload. A shared instance with request/response interceptors would remove the duplication and enable automatic 401 handling.
-- **Route guards.** Authentication is enforced by the backend; the router does not yet block unauthenticated navigation.
-- **Centralised state.** Some data (studio list, submission status) is fetched independently by more than one component. Pinia would deduplicate these.
-- **Replace `alert()`** with the toast pattern already used elsewhere in the UI.
-- **Extract `<script setup>` blocks** from the largest components, following the split already prototyped in `LoginPage.script.js`.
-- **Internationalisation** — UI strings are currently inlined in Indonesian.
-- **Automated tests** — no test harness is wired up yet.
+- [x] Axios instance + interceptors (headers, 401 handling)
+- [x] Route guards
+- [x] Shared submission / studio-count state (`useOwnerOverview`)
+- [x] Replace `alert()` with toasts
+- [x] Split the largest components (submission form, tabs, room form)
+- [ ] Internationalisation — UI strings are inlined in Indonesian
+- [ ] Component tests for the submission form and the withdrawal flow

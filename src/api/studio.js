@@ -1,189 +1,33 @@
-import axios from "axios";
-import { getIpAdresses } from "../services/axios/ip-adress.services";
-import { v4 as uuidv4 } from 'uuid'
+import { request, send } from './http'
 
+export const studioApi = {
+  // { page, limit, totalData, maxPage, data: [{ studio_id (uuid), studio_name, studio_city, ... }] }
+  list: (page, search = '', limit = 6) => request('post', 'owner/studio/list', { page, limit, search }, 'Gagal memuat daftar studio'),
 
-const BE_BASE_URL = import.meta.env.VITE_STUDIO_BAND_BE_BASE_URL
-const token = localStorage.getItem('token')
-const deviceId = localStorage.getItem('device_id')
-const ip = await getIpAdresses()
+  // Envelope as-is: status false simply means "no submission yet"
+  latestSubmission: () => send('post', 'owner/studio/submission/check', {}),
 
-async function listStudio(page, search) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/list`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {
-            page,
-            limit: 6,
-            search
-        }
-    })
+  submit: (payload) => request('post', 'owner/studio/submission', payload, 'Gagal mengirim pengajuan'),
 
-    return response
+  detail: (studioUuid) => request('post', 'owner/studio/detail', { studio_uuid: studioUuid }, 'Gagal memuat data studio'),
+
+  equipments: () => request('get', 'owner/studio/equipment/list', undefined, 'Gagal memuat daftar alat'),
+
+  rooms: (studioUuid) => request('post', 'owner/studio/studio-number/list', { page: 1, limit: 10000, studio_uuid: studioUuid }, 'Gagal memuat nomor studio'),
+
+  roomDetail: (studioUuid, studioNumberUuid) => request('post', 'owner/studio/studio-number/detail', { studio_uuid: studioUuid, studio_number_uuid: studioNumberUuid }, 'Gagal memuat detail nomor studio'),
+
+  createRoom: (payload) => request('post', 'owner/studio/studio-number/create', payload, 'Gagal menyimpan nomor studio'),
+
+  editRoom: (payload) => request('post', 'owner/studio/studio-number/edit', payload, 'Gagal menyimpan perubahan'),
 }
 
-async function submission() {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/submission/check`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {}
-    })
-
-    return response
+export const subscriptionApi = {
+  // { subscriptionPrice, subscriptionDuration (days) }
+  price: () => request('post', 'owner/studio/subscription/price', {}, 'Gagal memuat harga langganan'),
+  // { checkQr, qrContent?, transaction_uuid?, totalPayment?, expiredQris? } — a still-valid pending QR, if any
+  pendingQr: (studioUuid) => request('post', 'owner/studio/subscription/qr/check', { studio_id: studioUuid }, 'Gagal memuat QR'),
+  create: (studioUuid) => request('post', 'owner/studio/subscription', { studio_id: studioUuid }, 'Gagal membuat pembayaran'),
+  isPaid: async (studioUuid, transactionId) =>
+    (await request('post', 'owner/funding/subscription/status', { studio_id: studioUuid, transaction_id: transactionId })).payment_status === true,
 }
-
-async function studioNumberOwner(studio_uuid) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/studio-number/list`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {
-            page: 1,
-            limit: 10000,
-            studio_uuid,
-        }
-    })
-
-    return response
-}
-
-async function submitStudioNumber(payload) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/studio-number/create`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: { ...payload }
-    })
-
-    return response
-}
-
-async function studioNumberDetail(studio_number_uuid, studio_uuid) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/studio-number/detail`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {
-            studio_number_uuid,
-            studio_uuid
-        }
-    })
-
-    return response
-}
-
-async function editStudioNumber(payload) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/studio-number/edit`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: { ...payload }
-    })
-
-    return response
-}
-
-async function subscriptionPrice() {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/subscription/price`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {}
-    })
-
-    return response
-}
-
-async function checkQrSubscription(studio_uuid) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/subscription/qr/check`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {
-            studio_id : studio_uuid
-        }
-    })
-
-    return response
-}
-
-async function subscribeStudio(studio_uuid) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/studio/subscription`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {
-            studio_id : studio_uuid
-        }
-    })
-
-    return response
-}
-
-async function checkSubscriptionPayment(studio_uuid, transaction_id) {
-    const response = await axios({
-        method: 'POST',
-        url: `${BE_BASE_URL}owner/funding/subscription/status`,
-        headers: {
-            'authorization': `Bearer ${token}`,
-            'x-device-id': deviceId,
-            'x-ip-address': ip,
-            'x-request-id': uuidv4()
-        },
-        data: {
-            studio_id : studio_uuid,
-            transaction_id
-        }
-    })
-
-    return response
-}
-
-export { listStudio, submission, studioNumberOwner, submitStudioNumber, studioNumberDetail, editStudioNumber, subscriptionPrice, checkQrSubscription, subscribeStudio, checkSubscriptionPayment }
